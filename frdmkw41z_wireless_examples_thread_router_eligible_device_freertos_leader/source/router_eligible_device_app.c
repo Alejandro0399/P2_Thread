@@ -80,7 +80,8 @@ Private macros
 #define APP_TEMP_URI_PATH                       "/temp"
 #define APP_SINK_URI_PATH                       "/sink"
 /* OUR URI PATH */
-#define APP_TEAM_URI_PATH						"/team3"
+#define APP_TEAM3_URI_PATH						"/team3"
+#define APP_ACCEL_URI_PATH						"/accel"
 
 #if LARGE_NETWORK
 #define APP_RESET_TO_FACTORY_URI_PATH           "/reset"
@@ -126,6 +127,7 @@ static void APP_CoapSinkCb(coapSessionStatus_t sessionStatus, uint8_t *pData, co
 static void App_RestoreLeaderLed(uint8_t *param);
 /* OUR COAP CALLBACK*/
 static void APP_CoapTeam3Cb(coapSessionStatus_t sessionStatus, uint8_t *pData, coapSession_t *pSession, uint32_t dataLen);
+static void APP_CoapAccelCb(coapSessionStatus_t sessionStatus, uint8_t *pData, coapSession_t *pSession, uint32_t dataLen);
 
 #if LARGE_NETWORK
 static void APP_CoapResetToFactoryDefaultsCb(coapSessionStatus_t sessionStatus, uint8_t *pData, coapSession_t *pSession, uint32_t dataLen);
@@ -144,7 +146,8 @@ const coapUriPath_t gAPP_TEMP_URI_PATH = {SizeOfString(APP_TEMP_URI_PATH), (uint
 const coapUriPath_t gAPP_SINK_URI_PATH = {SizeOfString(APP_SINK_URI_PATH), (uint8_t *)APP_SINK_URI_PATH};
 
 /* OUR URI PATH */
-const coapUriPath_t gAPP_TEAM_URI_PATH = {SizeOfString(APP_TEAM_URI_PATH), (uint8_t *)APP_TEAM_URI_PATH};
+const coapUriPath_t gAPP_TEAM3_URI_PATH = {SizeOfString(APP_TEAM3_URI_PATH), (uint8_t *)APP_TEAM3_URI_PATH};
+const coapUriPath_t gAPP_ACCEL_URI_PATH = {SizeOfString(APP_ACCEL_URI_PATH), (uint8_t *)APP_ACCEL_URI_PATH};
 
 #if LARGE_NETWORK
 const coapUriPath_t gAPP_RESET_URI_PATH = {SizeOfString(APP_RESET_TO_FACTORY_URI_PATH), (uint8_t *)APP_RESET_TO_FACTORY_URI_PATH};
@@ -497,7 +500,8 @@ static void APP_InitCoapDemo
 {
     coapRegCbParams_t cbParams[] =  {{APP_CoapLedCb,  (coapUriPath_t *)&gAPP_LED_URI_PATH},
                                      {APP_CoapTempCb, (coapUriPath_t *)&gAPP_TEMP_URI_PATH},
-									 {APP_CoapTeam3Cb, (coapUriPath_t *)&gAPP_TEAM_URI_PATH}, // Our URI Path
+									 {APP_CoapTeam3Cb, (coapUriPath_t *)&gAPP_TEAM3_URI_PATH}, // Our URI Path
+									 {APP_CoapAccelCb, (coapUriPath_t *)&gAPP_ACCEL_URI_PATH}, // Our URI Path
 
 
 #if LARGE_NETWORK
@@ -1412,65 +1416,111 @@ uint32_t dataLen
 )
 
 {
-  static uint8_t pMySessionPayload[3]={0x31,0x32,0x33};
-  static uint32_t pMyPayloadSize=3;
-  coapSession_t *pMySession = NULL;
-  char* str_buffer;
+	static uint8_t pMySessionPayload[3]={0x31,0x32,0x33};
+	static uint32_t pMyPayloadSize=3;
+	coapSession_t *pMySession = NULL;
+	uint8_t *pTempString = NULL;
+	uint32_t ackPloadSize = 0, maxDisplayedString = 10;
 
-  /* Creation and initialization for CoAP session */
-  pMySession = COAP_OpenSession(mAppCoapInstId);
-  COAP_AddOptionToList(pMySession,COAP_URI_PATH_OPTION, APP_TEAM_URI_PATH,SizeOfString(APP_TEAM_URI_PATH));
+	/* Get sending address */
+    char remoteAddrStr[INET6_ADDRSTRLEN];
+	ntop(AF_INET6, (ipAddr_t*)&pSession->remoteAddrStorage.ss_addr, remoteAddrStr, INET6_ADDRSTRLEN);
 
+	/* Creation and initialization for CoAP session */
+	pMySession = COAP_OpenSession(mAppCoapInstId);
+	COAP_AddOptionToList(pMySession,COAP_URI_PATH_OPTION, APP_TEAM3_URI_PATH,SizeOfString(APP_TEAM3_URI_PATH));
 
-  if (gCoapConfirmable_c == pSession->msgType)
-  {
-   if (gCoapGET_c == pSession->code)
-   {
-	 shell_write("'CON' packet received 'GET' with payload: ");
-   }
-   if (gCoapPOST_c == pSession->code)
-   {
-	 shell_write("'CON' packet received 'POST' with payload: ");
-   }
-   if (gCoapPUT_c == pSession->code)
-   {
-	 shell_write("'CON' packet received 'PUT' with payload: ");
-   }
-   if (gCoapFailure_c!=sessionStatus)
-   {
-	 COAP_Send(pSession, gCoapMsgTypeAckSuccessChanged_c, pMySessionPayload, pMyPayloadSize);
-   }
-  }
+	if (gCoapConfirmable_c == pSession->msgType) // CON MESSAGE
+	{
+//		shell_printf("CON instruction received from: %d\t-", pSession->remoteAddrStorage);
+		shell_printf("CON instruction received from: ");
+		shell_printf(remoteAddrStr);
+		if (gCoapFailure_c!=sessionStatus)
+		{
+			/* creation and init of Ack CoAP session */
+			pMySession -> msgType = gCoapAcknowledgement_c; // TODO: dont need this?
+			pMySession -> code = gEmpty_c;
+			pMySession -> pCallback = NULL;
 
-  else if(gCoapNonConfirmable_c == pSession->msgType)
-  {
-	  if (gCoapGET_c == pSession->code)
-	  {
-		shell_write("'NON' packet received 'GET' with payload: ");
-	  }
-	  if (gCoapPOST_c == pSession->code)
-	  {
-		shell_write("'NON' packet received 'POST' with payload: ");
-	  }
-	  if (gCoapPUT_c == pSession->code)
-	  {
-		shell_write("'NON' packet received 'PUT' with payload: ");
-	  }
-  }
-  shell_writeN(pData, dataLen);
-  shell_write("\r\n");
-  /* creation and init of CoAP session */
-  pMySession -> msgType=gCoapNonConfirmable_c;
-  pMySession -> code= gCoapPOST_c;
-  pMySession -> pCallback =NULL;
-  /* Send message */
-  FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
-  COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize); //TODO: check message type
-//  COAP_Send(pSession, gCoapMsgTypeAckSuccessContent_c, pTempString, ackPloadSize);
+			pTempString = App_GetTempDataString();
+			ackPloadSize = strlen((char*)pTempString);
+			/* Send message */
+			FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
+			COAP_Send(pSession, gCoapMsgTypeAckSuccessChanged_c, pMySessionPayload, pMyPayloadSize);
+//			COAP_Send(pMySession, gCoapMsgTypeAckSuccessContent_c, pTempString, ackPloadSize);
+		}
+	}
+	else if(gCoapNonConfirmable_c == pSession->msgType) // NON MESSAGE
+	{
+		shell_printf("NON instruction received from: ");
+		shell_printf(remoteAddrStr);
+	}
 
-  shell_write("'NON' packet sent 'POST' with payload: ");
-  shell_writeN((char*) pMySessionPayload, pMyPayloadSize);
-  shell_write("\r\n");
+//	shell_writeN(pData, dataLen); // PRINTS incoming data
+	shell_write("\r\n");
+//	/* creation and init of CoAP session */
+//	pMySession -> msgType=gCoapNonConfirmable_c;
+//	pMySession -> code= gCoapPOST_c;
+//	pMySession -> pCallback =NULL;
+//	/* Send message */
+//	FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
+//	COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize); //TODO: check message type
+
+//	shell_write("'NON' packet sent 'POST' with payload: ");
+//	shell_writeN((char*) pMySessionPayload, pMyPayloadSize);
+//	shell_write("\r\n");
+}
+
+static void APP_CoapAccelCb
+(
+coapSessionStatus_t sessionStatus,
+uint8_t *pData,
+coapSession_t *pSession,
+uint32_t dataLen
+)
+
+{
+	static uint8_t pMySessionPayload[3]={0x31,0x32,0x33};
+	static uint32_t pMyPayloadSize=3;
+	coapSession_t *pMySession = NULL;
+	uint8_t *pTempString = NULL;
+	uint32_t ackPloadSize = 0, maxDisplayedString = 10;
+
+	/* Get sending address */
+    char remoteAddrStr[INET6_ADDRSTRLEN];
+	ntop(AF_INET6, (ipAddr_t*)&pSession->remoteAddrStorage.ss_addr, remoteAddrStr, INET6_ADDRSTRLEN);
+
+	/* Creation and initialization for CoAP session */
+	pMySession = COAP_OpenSession(mAppCoapInstId);
+	COAP_AddOptionToList(pMySession,COAP_URI_PATH_OPTION, APP_ACCEL_URI_PATH,SizeOfString(APP_ACCEL_URI_PATH));
+
+	if (gCoapGET_c == pSession->code)
+	{
+		if (gCoapConfirmable_c == pSession->msgType || gCoapNonConfirmable_c == pSession->msgType)
+		{
+			/* creation and init of CoAP session */
+			pMySession -> msgType = gCoapNonConfirmable_c;
+			pMySession -> code = gCoapPOST_c;
+			pMySession -> pCallback = NULL;
+			/* Send message */
+			FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
+			COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize); //TODO: check message type
+		}
+	}
+
+	shell_writeN(pData, dataLen); // PRINTS incoming data
+	shell_write("\r\n");
+//	/* creation and init of CoAP session */
+//	pMySession -> msgType=gCoapNonConfirmable_c;
+//	pMySession -> code= gCoapPOST_c;
+//	pMySession -> pCallback =NULL;
+//	/* Send message */
+//	FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
+//	COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize); //TODO: check message type
+
+//	shell_write("'NON' packet sent 'POST' with payload: ");
+//	shell_writeN((char*) pMySessionPayload, pMyPayloadSize);
+//	shell_write("\r\n");
 }
 
 #if LARGE_NETWORK
