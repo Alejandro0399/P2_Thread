@@ -125,6 +125,17 @@ Private macros
 
 #define BOARD_ACCEL_I2C_BASEADDR I2C1
 
+#define BOARD_DEBUG_UART_BASEADDR (uint32_t) LPUART0
+
+#define BOARD_DEBUG_UART_BAUDRATE 115200
+
+#define BOARD_DEBUG_UART_TYPE DEBUG_CONSOLE_DEVICE_TYPE_LPUART
+
+#define PIN2_IDX                         2u   /*!< Pin number for pin 2 in a port */
+#define PIN3_IDX                         3u   /*!< Pin number for pin 3 in a port */
+
+#define BOARD_DEBUG_UART_CLK_FREQ CLOCK_GetOsc0ErClkFreq()
+
 
 #if LARGE_NETWORK
 #define APP_RESET_TO_FACTORY_URI_PATH           "/reset"
@@ -230,6 +241,15 @@ i2c_master_handle_t g_MasterHandle;
 /* FXOS device address */
 const uint8_t g_accel_address[] = {0x1CU, 0x1DU, 0x1EU, 0x1FU};
 
+fxos_handle_t fxosHandle;
+uint8_t dataScale = 0;
+
+typedef struct
+{
+	int16_t x;
+	int16_t y;
+} xy_values;
+
 
 /*==================================================================================================
 Public functions
@@ -268,6 +288,76 @@ void APP_Init
     /* Initialize MyTask Timer */
     MyTask_Init(IncreaseCounter);
 
+    /* Board pin, clock, debug console init */
+    BOARD_InitPins();
+    BOARD_BootClockRUN();
+    BOARD_I2C_ReleaseBus();
+    BOARD_I2C_ConfigurePins();
+    BOARD_InitDebugConsole();
+
+    uint8_t sensorRange = 0;
+    uint8_t i = 0;
+    uint8_t regResult = 0;
+    uint8_t array_addr_size = 0;
+    bool foundDevice = false;
+    i2c_master_config_t i2cConfig;
+    uint32_t i2cSourceClock;
+
+    i2cSourceClock = CLOCK_GetFreq(ACCEL_I2C_CLK_SRC);
+    fxosHandle.base = BOARD_ACCEL_I2C_BASEADDR;
+    fxosHandle.i2cHandle = &g_MasterHandle;
+
+    I2C_MasterGetDefaultConfig(&i2cConfig);
+    I2C_MasterInit(BOARD_ACCEL_I2C_BASEADDR, &i2cConfig, i2cSourceClock);
+    I2C_MasterTransferCreateHandle(BOARD_ACCEL_I2C_BASEADDR, &g_MasterHandle, NULL, NULL);
+
+    /* Find sensor devices */
+        array_addr_size = sizeof(g_accel_address) / sizeof(g_accel_address[0]);
+        for (i = 0; i < array_addr_size; i++)
+        {
+            fxosHandle.xfer.slaveAddress = g_accel_address[i];
+            if (FXOS_ReadReg(&fxosHandle, WHO_AM_I_REG, &regResult, 1) == kStatus_Success)
+            {
+                foundDevice = true;
+                break;
+            }
+            if ((i == (array_addr_size - 1)) && (!foundDevice))
+            {
+                PRINTF("\r\nDo not found sensor device\r\n");
+                while (1)
+                {
+                };
+            }
+        }
+
+        /* Init accelerometer sensor */
+        if (FXOS_Init(&fxosHandle) != kStatus_Success)
+        {
+            return -1;
+        }
+        /* Get sensor range */
+        if (FXOS_ReadReg(&fxosHandle, XYZ_DATA_CFG_REG, &sensorRange, 1) != kStatus_Success)
+        {
+            return -1;
+        }
+        if (sensorRange == 0x00)
+        {
+            dataScale = 2U;
+        }
+        else if (sensorRange == 0x01)
+        {
+            dataScale = 4U;
+        }
+        else if (sensorRange == 0x10)
+        {
+            dataScale = 8U;
+        }
+        else
+        {
+        }
+        /* Init timer */
+        Timer_Init();
+
 #if THR_ENABLE_EVENT_MONITORING
     /* Initialize event monitoring */
     APP_InitEventMonitor(mThrInstanceId);
@@ -303,8 +393,6 @@ void APP_Init
         }
 #endif
     }
-
-    MyTaskTimer_Start();
 }
 
 /*!*************************************************************************************************
@@ -1533,9 +1621,9 @@ uint32_t dataLen
 	FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
 	COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize);
 
-	shell_write("Replied with counter: ");
-	shell_writeN((char*) pMySessionPayload, pMyPayloadSize);
-	shell_write("\r\n");
+//	shell_write("Replied with counter: ");
+//	shell_writeN((char*) pMySessionPayload, pMyPayloadSize);
+//	shell_write("\r\n");
 }
 
 
@@ -1603,7 +1691,8 @@ void BOARD_I2C_ReleaseBus(void)
     i2c_release_bus_delay();
 }
 /* Initialize timer module */
-static void Timer_Init(void)
+//static void Timer_Init(void)
+void Timer_Init(void)
 {
     /* convert to match type of data */
     tpm_config_t tpmInfo;
@@ -1636,94 +1725,20 @@ static void Board_UpdatePwm(uint16_t x, uint16_t y)
     TPM_UpdatePwmDutycycle(BOARD_TIMER_BASEADDR, (tpm_chnl_t)BOARD_SECOND_TIMER_CHANNEL, kTPM_EdgeAlignedPwm, y);
 }
 
-int main(void) // TODO: MAIN
+xy_values bubble(void)
 {
-    fxos_handle_t fxosHandle;
     fxos_data_t sensorData;
-    i2c_master_config_t i2cConfig;
-    uint8_t sensorRange = 0;
-    uint8_t dataScale = 0;
-    uint32_t i2cSourceClock;
     int16_t xData, yData;
     int16_t xAngle, yAngle;
-    uint8_t i = 0;
-    uint8_t regResult = 0;
-    uint8_t array_addr_size = 0;
-    bool foundDevice = false;
-
-    /* Board pin, clock, debug console init */
-    BOARD_InitPins();
-    BOARD_BootClockRUN();
-    BOARD_I2C_ReleaseBus();
-//    BOARD_I2C_ConfigurePins();
-//    BOARD_InitDebugConsole();
-
-    i2cSourceClock = CLOCK_GetFreq(ACCEL_I2C_CLK_SRC);
-    fxosHandle.base = BOARD_ACCEL_I2C_BASEADDR;
-    fxosHandle.i2cHandle = &g_MasterHandle;
-
-    I2C_MasterGetDefaultConfig(&i2cConfig);
-    I2C_MasterInit(BOARD_ACCEL_I2C_BASEADDR, &i2cConfig, i2cSourceClock);
-    I2C_MasterTransferCreateHandle(BOARD_ACCEL_I2C_BASEADDR, &g_MasterHandle, NULL, NULL);
-
-    /* Find sensor devices */
-    array_addr_size = sizeof(g_accel_address) / sizeof(g_accel_address[0]);
-    for (i = 0; i < array_addr_size; i++)
-    {
-        fxosHandle.xfer.slaveAddress = g_accel_address[i];
-        if (FXOS_ReadReg(&fxosHandle, WHO_AM_I_REG, &regResult, 1) == kStatus_Success)
-        {
-            foundDevice = true;
-            break;
-        }
-        if ((i == (array_addr_size - 1)) && (!foundDevice))
-        {
-            PRINTF("\r\nDo not found sensor device\r\n");
-            while (1)
-            {
-            };
-        }
-    }
-
-    /* Init accelerometer sensor */
-    if (FXOS_Init(&fxosHandle) != kStatus_Success)
-    {
-        return -1;
-    }
-    /* Get sensor range */
-    if (FXOS_ReadReg(&fxosHandle, XYZ_DATA_CFG_REG, &sensorRange, 1) != kStatus_Success)
-    {
-        return -1;
-    }
-    if (sensorRange == 0x00)
-    {
-        dataScale = 2U;
-    }
-    else if (sensorRange == 0x01)
-    {
-        dataScale = 4U;
-    }
-    else if (sensorRange == 0x10)
-    {
-        dataScale = 8U;
-    }
-    else
-    {
-    }
-    /* Init timer */
-    Timer_Init();
-
-    /* Print a note to terminal */
-    PRINTF("\r\nWelcome to BUBBLE example\r\n");
-    PRINTF("\r\nYou will see the change of LED brightness when change angles of board\r\n");
+    xy_values values;
 
     /* Main loop. Get sensor data and update duty cycle */
-    while (1)
-    {
         /* Get new accelerometer data. */
         if (FXOS_ReadSensorData(&fxosHandle, &sensorData) != kStatus_Success)
         {
-            return -1;
+        	values.x = -1;
+        	values.y = -1;
+            return values;
         }
 
         /* Get the X and Y data from the sensor data structure in 14 bit left format data*/
@@ -1763,8 +1778,50 @@ int main(void) // TODO: MAIN
         Board_UpdatePwm(xAngle, yAngle);
 
         /* Print out the raw accelerometer data. */
-        PRINTF("x= %6d y = %6d\r\n", xData, yData);
-    }
+//        PRINTF("x= %6d y = %6d\r\n", xData, yData);
+        values.x = xData;
+        values.y = yData;
+
+
+        return values;
+}
+
+void BOARD_I2C_ConfigurePins(void) {
+  CLOCK_EnableClock(kCLOCK_PortC);                           /* Port C Clock Gate Control: Clock enabled */
+
+  const port_pin_config_t portc2_pin38_config = {
+    kPORT_PullUp,                                            /* Internal pull-up resistor is enabled */
+    kPORT_FastSlewRate,                                      /* Fast slew rate is configured */
+    kPORT_PassiveFilterDisable,                              /* Passive filter is disabled */
+    kPORT_LowDriveStrength,                                  /* Low drive strength is configured */
+    kPORT_MuxAlt3,                                           /* Pin is configured as I2C1_SCL */
+  };
+  PORT_SetPinConfig(PORTC, PIN2_IDX, &portc2_pin38_config);  /* PORTC2 (pin 38) is configured as I2C1_SCL */
+  const port_pin_config_t portc3_pin39_config = {
+    kPORT_PullUp,                                            /* Internal pull-up resistor is enabled */
+    kPORT_FastSlewRate,                                      /* Fast slew rate is configured */
+    kPORT_PassiveFilterDisable,                              /* Passive filter is disabled */
+    kPORT_LowDriveStrength,                                  /* Low drive strength is configured */
+    kPORT_MuxAlt3,                                           /* Pin is configured as I2C1_SDA */
+  };
+  PORT_SetPinConfig(PORTC, PIN3_IDX, &portc3_pin39_config);  /* PORTC3 (pin 39) is configured as I2C1_SDA */
+}
+
+void BOARD_InitDebugConsole(void)
+{
+    uint32_t uartClkSrcFreq;
+
+    /* SIM_SOPT2[27:26]:
+     *  00: Clock Disabled
+     *  01: MCGFLLCLK
+     *  10: OSCERCLK
+     *  11: MCGIRCCLK
+     */
+    CLOCK_SetLpuartClock(2);
+
+    uartClkSrcFreq = BOARD_DEBUG_UART_CLK_FREQ;
+
+    DbgConsole_Init(BOARD_DEBUG_UART_BASEADDR, BOARD_DEBUG_UART_BAUDRATE, BOARD_DEBUG_UART_TYPE, uartClkSrcFreq);
 }
 
 static void APP_CoapAccelCb
@@ -1776,49 +1833,52 @@ uint32_t dataLen
 )
 
 {
-	static uint8_t pMySessionPayload[3]={0x31,0x32,0x33};
-	static uint32_t pMyPayloadSize=3;
-	coapSession_t *pMySession = NULL;
-	uint8_t *pTempString = NULL;
-	uint32_t ackPloadSize = 0, maxDisplayedString = 10;
-
-	/* Get sending address */
-    char remoteAddrStr[INET6_ADDRSTRLEN];
-	ntop(AF_INET6, (ipAddr_t*)&pSession->remoteAddrStorage.ss_addr, remoteAddrStr, INET6_ADDRSTRLEN);
-
-	/* Creation and initialization for CoAP session */
-	pMySession = COAP_OpenSession(mAppCoapInstId);
-	COAP_AddOptionToList(pMySession,COAP_URI_PATH_OPTION, APP_ACCEL_URI_PATH,SizeOfString(APP_ACCEL_URI_PATH));
-
-	if (gCoapGET_c == pSession->code)
-	{
-		if (gCoapConfirmable_c == pSession->msgType) // CONFIRMABLE
-		{
-			/* Send Ack message */
-			COAP_Send(pSession, gCoapMsgTypeAckSuccessChanged_c, pMySessionPayload, pMyPayloadSize);
-		}
-		/* creation and init of CoAP session */
-		pMySession -> msgType = gCoapNonConfirmable_c;
-		pMySession -> code = gCoapPOST_c;
-		pMySession -> pCallback = NULL;
-		/* Send message */
-		FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
-		COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize);
-	}
-
-	shell_writeN(pData, dataLen); // PRINTS incoming data
-	shell_write("\r\n");
-//	/* creation and init of CoAP session */
-//	pMySession -> msgType=gCoapNonConfirmable_c;
-//	pMySession -> code= gCoapPOST_c;
-//	pMySession -> pCallback =NULL;
-//	/* Send message */
-//	FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
-//	COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize); //TODO: check message type
-
-//	shell_write("'NON' packet sent 'POST' with payload: ");
-//	shell_writeN((char*) pMySessionPayload, pMyPayloadSize);
+//	static uint8_t pMySessionPayload[3]={0x31,0x32,0x33};
+//	static uint32_t pMyPayloadSize=3;
+//	coapSession_t *pMySession = NULL;
+//	uint8_t *pTempString = NULL;
+//	uint32_t ackPloadSize = 0, maxDisplayedString = 10;
+//
+//	/* Get sending address */
+//    char remoteAddrStr[INET6_ADDRSTRLEN];
+//	ntop(AF_INET6, (ipAddr_t*)&pSession->remoteAddrStorage.ss_addr, remoteAddrStr, INET6_ADDRSTRLEN);
+//
+//	/* Creation and initialization for CoAP session */
+//	pMySession = COAP_OpenSession(mAppCoapInstId);
+//	COAP_AddOptionToList(pMySession,COAP_URI_PATH_OPTION, APP_ACCEL_URI_PATH,SizeOfString(APP_ACCEL_URI_PATH));
+//
+//	if (gCoapGET_c == pSession->code)
+//	{
+//		if (gCoapConfirmable_c == pSession->msgType) // CONFIRMABLE
+//		{
+//			/* Send Ack message */
+//			COAP_Send(pSession, gCoapMsgTypeAckSuccessChanged_c, pMySessionPayload, pMyPayloadSize);
+//		}
+//		/* creation and init of CoAP session */
+//		pMySession -> msgType = gCoapNonConfirmable_c;
+//		pMySession -> code = gCoapPOST_c;
+//		pMySession -> pCallback = NULL;
+//		/* Send message */
+//		FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
+//		COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize);
+//	}
+//
+//	shell_writeN(pData, dataLen); // PRINTS incoming data
 //	shell_write("\r\n");
+////	/* creation and init of CoAP session */
+////	pMySession -> msgType=gCoapNonConfirmable_c;
+////	pMySession -> code= gCoapPOST_c;
+////	pMySession -> pCallback =NULL;
+////	/* Send message */
+////	FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
+////	COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize); //TODO: check message type
+//
+////	shell_write("'NON' packet sent 'POST' with payload: ");
+////	shell_writeN((char*) pMySessionPayload, pMyPayloadSize);
+////	shell_write("\r\n");
+	xy_values xy;
+	xy = bubble();
+	PRINTF("x= %6d y = %6d\r\n", xy.x, xy.y);
 }
 
 #if LARGE_NETWORK

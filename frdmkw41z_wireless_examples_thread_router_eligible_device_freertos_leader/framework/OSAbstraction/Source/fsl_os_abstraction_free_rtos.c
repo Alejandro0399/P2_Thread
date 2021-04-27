@@ -1007,15 +1007,15 @@ void OSA_InstallIntHandler(uint32_t IRQNumber, void (*handler)(void))
 *************************************************************************************
 ********************************************************************************** */
 OSA_TASK_DEFINE(startup_task, gMainThreadPriority_c, 1, gMainThreadStackSize_c, 0)  ;
-//int main (void) // TODO
-//{
-//    /* Initialize MCU clock */
-//    hardware_init();
-//    OSA_TaskCreate(OSA_TASK(startup_task), NULL);
-//    vTaskStartScheduler();
-//
-//    return 0;
-//}
+int main (void)
+{
+    /* Initialize MCU clock */
+    hardware_init();
+    OSA_TaskCreate(OSA_TASK(startup_task), NULL);
+    vTaskStartScheduler();
+
+    return 0;
+}
 
 /*! *********************************************************************************
 * \brief     Allocates a osObjectStruct_t block in the osObjectHeap array.
