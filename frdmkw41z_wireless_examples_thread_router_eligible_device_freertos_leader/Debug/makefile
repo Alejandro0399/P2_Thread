@@ -72,7 +72,7 @@ all: frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader.a
 frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader.axf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU Linker'
-	arm-none-eabi-gcc -L"C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\libs" -Xlinker -Map="frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -Xlinker --cref -mcpu=cortex-m0plus -mthumb -T MKW41Z512xxx4_connectivity.ld -L ../source -o "frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader.axf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-gcc -L"D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\libs" -Xlinker -Map="frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -Xlinker --cref -mcpu=cortex-m0plus -mthumb -T MKW41Z512xxx4_connectivity.ld -L ../source -o "frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader.axf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 	$(MAKE) --no-print-directory post-build

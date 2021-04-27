@@ -1,56 +1,56 @@
 framework/FSCI/Source/FsciLogging.o framework/FSCI/Source/FsciLogging.d: \
  ../framework/FSCI/Source/FsciLogging.c \
- C:/Users/edwin/MCUXpressoWorkspace/REDES/frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader/source/config.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_config.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_stack_config.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\core\interface\modules/stack_config.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\core\interface\modules/thread_stack_config.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_framework_config.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_mac_config.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\common/EmbeddedTypes.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\FSCI\Interface/FsciInterface.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\SerialManager\Interface/SerialManager.h \
+ D:/ITESO/P_Thread/frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader/source/config.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_config.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_stack_config.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\core\interface\modules/stack_config.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\core\interface\modules/thread_stack_config.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_framework_config.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_mac_config.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\common/EmbeddedTypes.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\FSCI\Interface/FsciInterface.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\SerialManager\Interface/SerialManager.h \
  ../framework/FSCI/Source/FsciCommunication.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\TimersManager\Interface/TimersManager.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\OSAbstraction\Interface/fsl_os_abstraction.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\OSAbstraction\Interface/fsl_os_abstraction_config.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\TimersManager\Interface/TimersManager.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\OSAbstraction\Interface/fsl_os_abstraction.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\OSAbstraction\Interface/fsl_os_abstraction_config.h \
  ../framework/FSCI/Source/FsciCommands.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\FunctionLib/FunctionLib.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\MemManager\Interface/MemManager.h \
- C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\Lists/GenericList.h
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\FunctionLib/FunctionLib.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\MemManager\Interface/MemManager.h \
+ D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\Lists/GenericList.h
 
-C:/Users/edwin/MCUXpressoWorkspace/REDES/frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader/source/config.h:
+D:/ITESO/P_Thread/frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader/source/config.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_config.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_config.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_stack_config.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_stack_config.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\core\interface\modules/stack_config.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\core\interface\modules/stack_config.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\core\interface\modules/thread_stack_config.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\core\interface\modules/thread_stack_config.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_framework_config.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_framework_config.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_mac_config.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\nwk_ip\app\config/app_mac_config.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\common/EmbeddedTypes.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\common/EmbeddedTypes.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\FSCI\Interface/FsciInterface.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\FSCI\Interface/FsciInterface.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\SerialManager\Interface/SerialManager.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\SerialManager\Interface/SerialManager.h:
 
 ../framework/FSCI/Source/FsciCommunication.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\TimersManager\Interface/TimersManager.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\TimersManager\Interface/TimersManager.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\OSAbstraction\Interface/fsl_os_abstraction.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\OSAbstraction\Interface/fsl_os_abstraction.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\OSAbstraction\Interface/fsl_os_abstraction_config.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\OSAbstraction\Interface/fsl_os_abstraction_config.h:
 
 ../framework/FSCI/Source/FsciCommands.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\FunctionLib/FunctionLib.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\FunctionLib/FunctionLib.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\MemManager\Interface/MemManager.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\MemManager\Interface/MemManager.h:
 
-C:\Users\edwin\MCUXpressoWorkspace\REDES\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\Lists/GenericList.h:
+D:\ITESO\P_Thread\frdmkw41z_wireless_examples_thread_router_eligible_device_freertos_leader\framework\Lists/GenericList.h:
