@@ -5,7 +5,7 @@
  *      Author: edwin
  */
 
-#include <MyNewTask.h>
+#include "MyNewTask.h"
 
 /* OSA Task Definition*/
 OSA_TASK_DEFINE(My_Task, gMyTaskPriority_c, 1, gMyTaskStackSize_c, FALSE );
@@ -40,7 +40,7 @@ void My_Task(osaTaskParam_t argument)
 		{
 		case gMyNewTaskEvent1_c: /* Initializing event */
 			TMR_StartIntervalTimer(myTimerID, /* myTimerID */
-					1000, /* Timer's Timeout (3s) */
+					5000, /* Timer's Timeout (3s) */
 					g_callback, /* Pointer to callback function */
 					NULL
 			);
