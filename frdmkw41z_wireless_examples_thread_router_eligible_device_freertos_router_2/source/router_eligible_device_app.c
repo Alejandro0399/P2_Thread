@@ -901,7 +901,7 @@ static void APP_ReportTemp
             pSession->pCallback = NULL;
             FLib_MemCpy(&pSession->remoteAddrStorage.ss_addr, &gCoapDestAddress, sizeof(ipAddr_t));
             ackPloadSize = strlen((char *)pTempString);
-            pSession->pUriPath = (coapUriPath_t *)&gAPP_ACCEL_URI_PATH;
+            pSession->pUriPath = (coapUriPath_t *)&gAPP_TEMP_URI_PATH;
 
             if(!IP6_IsMulticastAddr(&gCoapDestAddress))
             {
