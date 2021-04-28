@@ -262,8 +262,6 @@ Public functions
 void IncreaseCounter(void)
 {
 	g_counter = (g_counter + 1) % 200; /* Increase counter value */
-	PRINTF("%d", g_counter);
-//	g_counter = (g_counter + 1) % 10; /* Increase counter value */
 }
 
 void APP_Init
@@ -1898,7 +1896,7 @@ uint32_t dataLen
 		{
 			pMySessionPayload[j] = str[j];
 		}
-		PRINTF("Sending: %s", pMySessionPayload);
+		PRINTF("Sending: %s\n", pMySessionPayload);
 
 		FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
 		COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize);
