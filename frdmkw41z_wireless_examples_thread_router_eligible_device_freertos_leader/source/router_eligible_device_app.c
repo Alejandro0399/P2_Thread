@@ -261,8 +261,8 @@ Public functions
 ***************************************************************************************************/
 void IncreaseCounter(void)
 {
-//	g_counter = (g_counter + 1) % 200; /* Increase counter value */
-	g_counter = (g_counter + 1) % 10; /* Increase counter value */
+	g_counter = (g_counter + 1) % 200; /* Increase counter value */
+//	g_counter = (g_counter + 1) % 10; /* Increase counter value */
 }
 
 void APP_Init
