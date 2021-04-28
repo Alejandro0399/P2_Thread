@@ -1896,7 +1896,7 @@ uint32_t dataLen
 		{
 			pMySessionPayload[j] = str[j];
 		}
-		PRINTF("Sending: %s\n", pMySessionPayload);
+//		PRINTF("Sending: %s\n", pMySessionPayload);
 
 		FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
 		COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize);
