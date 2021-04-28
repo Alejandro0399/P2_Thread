@@ -80,7 +80,7 @@ Private macros
 #define gAppJoinTimeout_c                       800    /* miliseconds */
 
 #define APP_LED_URI_PATH                        "/led"
-#define APP_ACCEL_URI_PATH                       "/accel"
+#define APP_TEMP_URI_PATH                       "/temp"
 #define APP_SINK_URI_PATH                       "/sink"
 #define APP_TEAM_URI_PATH						"/team3"
 #if LARGE_NETWORK
@@ -122,7 +122,7 @@ static void APP_LocalDataSinkRelease(uint8_t *pParam);
 static void APP_ProcessLedCmd(uint8_t *pCommand, uint8_t dataLen);
 static void APP_CoapGenericCallback(coapSessionStatus_t sessionStatus, uint8_t *pData, coapSession_t *pSession, uint32_t dataLen);
 static void APP_CoapLedCb(coapSessionStatus_t sessionStatus, uint8_t *pData, coapSession_t *pSession, uint32_t dataLen);
-static void APP_CoapAccelCb(coapSessionStatus_t sessionStatus, uint8_t *pData, coapSession_t *pSession, uint32_t dataLen);
+static void APP_CoapTempCb(coapSessionStatus_t sessionStatus, uint8_t *pData, coapSession_t *pSession, uint32_t dataLen);
 static void APP_CoapSinkCb(coapSessionStatus_t sessionStatus, uint8_t *pData, coapSession_t *pSession, uint32_t dataLen);
 static void App_RestoreLeaderLed(uint8_t *param);
 #if LARGE_NETWORK
@@ -138,7 +138,7 @@ static void APP_AutoStartCb(void *param);
 Public global variables declarations
 ==================================================================================================*/
 const coapUriPath_t gAPP_LED_URI_PATH  = {SizeOfString(APP_LED_URI_PATH), (uint8_t *)APP_LED_URI_PATH};
-const coapUriPath_t gAPP_ACCEL_URI_PATH = {SizeOfString(APP_ACCEL_URI_PATH), (uint8_t *)APP_ACCEL_URI_PATH};
+const coapUriPath_t gAPP_TEMP_URI_PATH = {SizeOfString(APP_TEMP_URI_PATH), (uint8_t *)APP_TEMP_URI_PATH};
 const coapUriPath_t gAPP_SINK_URI_PATH = {SizeOfString(APP_SINK_URI_PATH), (uint8_t *)APP_SINK_URI_PATH};
 const coapUriPath_t gAPP_TEAM_URI_PATH = {SizeOfString(APP_TEAM_URI_PATH), (uint8_t *)APP_TEAM_URI_PATH};
 #if LARGE_NETWORK
@@ -246,7 +246,6 @@ void APP_Init
 #endif
     }
 
-    //MyTaskTimer_Start();
 }
 
 /*!*************************************************************************************************
@@ -503,7 +502,7 @@ static void APP_InitCoapDemo
 )
 {
     coapRegCbParams_t cbParams[] =  {{APP_CoapLedCb,  (coapUriPath_t *)&gAPP_LED_URI_PATH},
-                                     {APP_CoapAccelCb, (coapUriPath_t *)&gAPP_ACCEL_URI_PATH},
+                                     {APP_CoapTempCb, (coapUriPath_t *)&gAPP_TEMP_URI_PATH},
 #if LARGE_NETWORK
                                      {APP_CoapResetToFactoryDefaultsCb, (coapUriPath_t *)&gAPP_RESET_URI_PATH},
 #endif
@@ -854,7 +853,7 @@ static void APP_CoapGenericCallback
     /* If no ACK was received, try again */
     if(sessionStatus == gCoapFailure_c)
     {
-        if(FLib_MemCmp(pSession->pUriPath->pUriPath, (coapUriPath_t *)&gAPP_ACCEL_URI_PATH.pUriPath,
+        if(FLib_MemCmp(pSession->pUriPath->pUriPath, (coapUriPath_t *)&gAPP_TEMP_URI_PATH.pUriPath,
                        pSession->pUriPath->length))
         {
             (void)NWKU_SendMsg(APP_ReportTemp, NULL, mpAppThreadMsgQueue);
@@ -1278,7 +1277,7 @@ static void APP_ProcessLedCmd
 
 /*!*************************************************************************************************
 \private
-\fn     static void APP_CoapAccelCb(coapSessionStatus_t sessionStatus, uint8_t *pData,
+\fn     static void APP_CoapTempCb(coapSessionStatus_t sessionStatus, uint8_t *pData,
                                    coapSession_t *pSession, uint32_t dataLen)
 \brief  This function is the callback function for CoAP temperature message.
 \brief  It sends the temperature value in a CoAP ACK message.
@@ -1288,7 +1287,7 @@ static void APP_ProcessLedCmd
 \param  [in]    pSession        Pointer to CoAP session
 \param  [in]    dataLen         Length of CoAP payload
 ***************************************************************************************************/
-static void APP_CoapAccelCb
+static void APP_CoapTempCb
 (
     coapSessionStatus_t sessionStatus,
     uint8_t *pData,
@@ -1296,18 +1295,10 @@ static void APP_CoapAccelCb
     uint32_t dataLen
 )
 {
-	uint8_t accel_data[6];
-	FLib_MemCpy(accel_data,pData,dataLen);
+
     uint8_t *pTempString = NULL;
     uint32_t ackPloadSize = 0, maxDisplayedString = 10;
-    uint8_t X[8];
-    uint8_t Y[8];
-    uint8_t Z[8];
-    X[0]='+';
-	Y[0]='+';
-	Z[0]='+';
-    int j=1;
-    uint8_t temporal=0;
+
 
     /* Send CoAP ACK */
     if(gCoapGET_c == pSession->code)
@@ -1323,85 +1314,19 @@ static void APP_CoapAccelCb
         {
             char addrStr[INET6_ADDRSTRLEN];
             uint8_t temp[10];
-            uint16_t a2_temp;
+
 
             ntop(AF_INET6, (ipAddr_t*)&pSession->remoteAddrStorage.ss_addr, addrStr, INET6_ADDRSTRLEN);
             shell_write("\r");
 
             if(0 != dataLen)
             {
-            	//x negativo
-            	if((accel_data[0] & 0x80) == 0x80)
-            	{
-            		a2_temp = (accel_data[0]<<8) | (accel_data[1]);
-            		a2_temp = (~a2_temp)+1;
-            		accel_data[0] = a2_temp>>8;
-            		accel_data[1] = a2_temp & 0xFF;
-            		X[0]='-';
-            	}
-            	//y negativo
-            	if((accel_data[2] & 0x80) == 0x80)
-				{
 
-            		a2_temp = (accel_data[2]<<8) | (accel_data[3]);
-            		a2_temp = (~a2_temp)+1;
-            		accel_data[2] = a2_temp>>8;
-            		accel_data[3] = a2_temp & 0xFF;
-            		Y[0]='-';
-				}
-            	//z negativo
-            	if((accel_data[4] & 0x80) == 0x80)
-				{
-
-            		a2_temp = (accel_data[4]<<8) | (accel_data[5]);
-            		a2_temp = (~a2_temp)+1;
-            		accel_data[4] = a2_temp>>8;
-            		accel_data[5] = a2_temp & 0xFF;
-            		Z[0]='-';
-				}
-            	int i=0;
-            	for(;i<2;i++)
-				{
-            		temporal = accel_data[i] ;
-					X[j++] = (temporal/100)+48;
-					temporal = temporal%100;
-					X[j++] = (temporal/10)+48;
-					X[j++] = (temporal%10)+48;
-				}
-            	j=1;
-            	for(;i<4;i++)
-				{
-            		temporal = accel_data[i] ;
-					Y[j++] = (temporal/100)+48;
-					temporal = temporal%100;
-					Y[j++] = (temporal/10)+48;
-					Y[j++] = (temporal%10)+48;
-				}
-            	j=1;
-            	for(;i<6;i++)
-				{
-            		temporal = accel_data[i] ;
-					Z[j++] = (temporal/100)+48;
-					temporal = temporal%100;
-					Z[j++] = (temporal/10)+48;
-					Z[j++] = (temporal%10)+48;
-
-				}
-            	X[7]='\0';
-            	Y[7]='\0';
-            	Z[7]='\0';
-            	shell_printf("\n\r X = ");
-            	shell_printf((char*)X);
-            	shell_printf(" Y = ");
-            	shell_printf((char*)Y);
-            	shell_printf(" Z = ");
-            	shell_printf((char*)Z);
-            	shell_printf("\n\r");
                 /* Prevent from buffer overload */
                 (dataLen >= maxDisplayedString) ? (dataLen = (maxDisplayedString - 1)) : (dataLen);
                 temp[dataLen]='\0';
                 FLib_MemCpy(temp,pData,dataLen);
-                //shell_printf((char*)temp);
+                shell_printf((char*)temp);
             }
             shell_printf("\tFrom IPv6 Address: %s\n\r", addrStr);
             shell_refresh();
