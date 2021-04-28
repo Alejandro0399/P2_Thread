@@ -32,3 +32,4 @@ fsl_os_abstraction_free_rtos.c:734:13:OSA_EventDestroy	8	static
 fsl_os_abstraction_free_rtos.c:957:6:OSA_EnableIRQGlobal	0	static
 fsl_os_abstraction_free_rtos.c:977:6:OSA_DisableIRQGlobal	0	static
 fsl_os_abstraction_free_rtos.c:992:6:OSA_InstallIntHandler	8	static
+fsl_os_abstraction_free_rtos.c:1010:5:main	8	static
