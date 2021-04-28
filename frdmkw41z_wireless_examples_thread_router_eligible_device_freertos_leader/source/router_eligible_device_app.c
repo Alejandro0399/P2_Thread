@@ -262,6 +262,7 @@ Public functions
 void IncreaseCounter(void)
 {
 	g_counter = (g_counter + 1) % 200; /* Increase counter value */
+	PRINTF("%d", g_counter);
 //	g_counter = (g_counter + 1) % 10; /* Increase counter value */
 }
 
