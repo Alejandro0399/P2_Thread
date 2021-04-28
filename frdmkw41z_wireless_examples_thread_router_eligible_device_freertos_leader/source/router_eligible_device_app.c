@@ -248,7 +248,8 @@ typedef struct
 {
 	int16_t x;
 	int16_t y;
-} xy_values;
+	int16_t z;
+} xyz_values;
 
 
 /*==================================================================================================
@@ -1566,15 +1567,17 @@ uint32_t dataLen
 )
 
 {
-	uint8_t counter = 5;
 	static uint8_t pMySessionPayload[3] = {0x31,0x32,0x33};
-	static uint32_t pMyPayloadSize = 1;
+	static uint32_t pMyPayloadSize = 3;
 	coapSession_t *pMySession = NULL;
 	uint8_t *pTempString = NULL;
 	uint32_t ackPloadSize = 0, maxDisplayedString = 10;
+	char snum[3];
+	itoa(g_counter, snum, 10);
 
-
-	pMySessionPayload[0] = g_counter + 48;
+	pMySessionPayload[0] = snum[0];
+	pMySessionPayload[1] = snum[1];
+	pMySessionPayload[2] = snum[2];
 
 	/* Get sending address */
     char remoteAddrStr[INET6_ADDRSTRLEN];
@@ -1591,18 +1594,8 @@ uint32_t dataLen
 		shell_printf(remoteAddrStr);
 		if (gCoapFailure_c!=sessionStatus)
 		{
-			/* creation and init of Ack CoAP session */
-//			pMySession -> msgType = gCoapAcknowledgement_c; // TODO: dont need this?
-//			pMySession -> code = gEmpty_c;
-//			pMySession -> pCallback = NULL;
-
-
 			/* Send Ack message */
 			COAP_Send(pSession, gCoapMsgTypeAckSuccessChanged_c, pMySessionPayload, pMyPayloadSize);
-//			FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
-//			pTempString = App_GetTempDataString();
-//			ackPloadSize = strlen((char*)pTempString);
-//			COAP_Send(pMySession, gCoapMsgTypeAckSuccessContent_c, pTempString, ackPloadSize);
 		}
 	}
 	else if(gCoapNonConfirmable_c == pSession->msgType) // NON MESSAGE
@@ -1611,7 +1604,6 @@ uint32_t dataLen
 		shell_printf(remoteAddrStr);
 	}
 
-//	shell_writeN(pData, dataLen); // PRINTS incoming data
 	shell_write("\r\n");
 	/* creation and init of CoAP session */
 	pMySession -> msgType = gCoapNonConfirmable_c;
@@ -1620,10 +1612,6 @@ uint32_t dataLen
 	/* Send message */
 	FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
 	COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize);
-
-//	shell_write("Replied with counter: ");
-//	shell_writeN((char*) pMySessionPayload, pMyPayloadSize);
-//	shell_write("\r\n");
 }
 
 
@@ -1725,12 +1713,12 @@ static void Board_UpdatePwm(uint16_t x, uint16_t y)
     TPM_UpdatePwmDutycycle(BOARD_TIMER_BASEADDR, (tpm_chnl_t)BOARD_SECOND_TIMER_CHANNEL, kTPM_EdgeAlignedPwm, y);
 }
 
-xy_values bubble(void)
+xyz_values bubble(void)
 {
     fxos_data_t sensorData;
-    int16_t xData, yData;
-    int16_t xAngle, yAngle;
-    xy_values values;
+    int16_t xData, yData, zData;
+    int16_t xAngle, yAngle, zAngle;
+    xyz_values values;
 
     /* Main loop. Get sensor data and update duty cycle */
         /* Get new accelerometer data. */
@@ -1738,12 +1726,14 @@ xy_values bubble(void)
         {
         	values.x = -1;
         	values.y = -1;
+        	values.z = -1;
             return values;
         }
 
         /* Get the X and Y data from the sensor data structure in 14 bit left format data*/
         xData = (int16_t)((uint16_t)((uint16_t)sensorData.accelXMSB << 8) | (uint16_t)sensorData.accelXLSB) / 4U;
         yData = (int16_t)((uint16_t)((uint16_t)sensorData.accelYMSB << 8) | (uint16_t)sensorData.accelYLSB) / 4U;
+        zData = (int16_t)((uint16_t)((uint16_t)sensorData.accelZMSB << 8) | (uint16_t)sensorData.accelZLSB) / 4U;
 
         /* Convert raw data to angle (normalize to 0-90 degrees). No negative angles. */
         xAngle = (int16_t)floor((double)xData * (double)dataScale * 90 / 8192);
@@ -1756,6 +1746,11 @@ xy_values bubble(void)
         {
             yAngle *= -1;
         }
+        zAngle = (int16_t)floor((double)zData * (double)dataScale * 90 / 8192);
+		if (zAngle < 0)
+		{
+			zAngle *= -1;
+		}
         /* Update angles to turn on LEDs when angles ~ 90 */
         if (xAngle > ANGLE_UPPER_BOUND)
         {
@@ -1765,6 +1760,10 @@ xy_values bubble(void)
         {
             yAngle = 100;
         }
+        if (zAngle > ANGLE_UPPER_BOUND)
+		{
+			zAngle = 100;
+		}
         /* Update angles to turn off LEDs when angles ~ 0 */
         if (xAngle < ANGLE_LOWER_BOUND)
         {
@@ -1774,6 +1773,10 @@ xy_values bubble(void)
         {
             yAngle = 0;
         }
+        if (zAngle < ANGLE_LOWER_BOUND)
+		{
+			zAngle = 0;
+		}
 
         Board_UpdatePwm(xAngle, yAngle);
 
@@ -1781,7 +1784,7 @@ xy_values bubble(void)
 //        PRINTF("x= %6d y = %6d\r\n", xData, yData);
         values.x = xData;
         values.y = yData;
-
+        values.z = zData;
 
         return values;
 }
@@ -1833,52 +1836,79 @@ uint32_t dataLen
 )
 
 {
-//	static uint8_t pMySessionPayload[3]={0x31,0x32,0x33};
-//	static uint32_t pMyPayloadSize=3;
-//	coapSession_t *pMySession = NULL;
-//	uint8_t *pTempString = NULL;
-//	uint32_t ackPloadSize = 0, maxDisplayedString = 10;
-//
-//	/* Get sending address */
+	static uint8_t pMySessionPayload[25];
+	static uint32_t pMyPayloadSize=25;
+	coapSession_t *pMySession = NULL;
+	uint8_t *pTempString = NULL;
+	uint32_t ackPloadSize = 0, maxDisplayedString = 10;
+	xyz_values xyz;
+
+	/* Get sending address */
 //    char remoteAddrStr[INET6_ADDRSTRLEN];
 //	ntop(AF_INET6, (ipAddr_t*)&pSession->remoteAddrStorage.ss_addr, remoteAddrStr, INET6_ADDRSTRLEN);
-//
-//	/* Creation and initialization for CoAP session */
-//	pMySession = COAP_OpenSession(mAppCoapInstId);
-//	COAP_AddOptionToList(pMySession,COAP_URI_PATH_OPTION, APP_ACCEL_URI_PATH,SizeOfString(APP_ACCEL_URI_PATH));
-//
-//	if (gCoapGET_c == pSession->code)
+
+	/* Creation and initialization for CoAP session */
+	pMySession = COAP_OpenSession(mAppCoapInstId);
+	COAP_AddOptionToList(pMySession,COAP_URI_PATH_OPTION, APP_ACCEL_URI_PATH,SizeOfString(APP_ACCEL_URI_PATH));
+
+	if(gCoapGET_c == pSession->code)
+	{
+		if (gCoapConfirmable_c == pSession->msgType) // CONFIRMABLE
+		{
+			/* Send Ack message */
+			COAP_Send(pSession, gCoapMsgTypeAckSuccessChanged_c, pMySessionPayload, pMyPayloadSize);
+		}
+		/* creation and init of CoAP session */
+		pMySession -> msgType = gCoapNonConfirmable_c;
+		pMySession -> code = gCoapPOST_c;
+		pMySession -> pCallback = NULL;
+		/* Send message */
+		xyz = bubble();
+
+		char xnum[4];
+		char ynum[4];
+		char znum[4];
+
+		itoa(xyz.x, xnum, 10);
+		itoa(xyz.y, ynum, 10);
+		itoa(xyz.z, znum, 10);
+
+		char str[25];
+
+		for(int i=0; i<4; i++) // Remove \0 from string
+		{
+			if(xnum[i] == '\0')
+			{
+				xnum[i] = ' ';
+			}
+			if(ynum[i] == '\0')
+			{
+				ynum[i] = ' ';
+			}
+			if(znum[i] == '\0')
+			{
+				znum[i] = ' ';
+			}
+		}
+
+		sprintf(str, "X=%c%c%c%c Y=%c%c%c%c Z=%c%c%c%c",xnum[0],xnum[1],xnum[2],xnum[3], ynum[0],ynum[1],ynum[2],ynum[3], znum[0],znum[1],znum[2],znum[3]);
+
+		for(int j=0; j<25; j++)
+		{
+			pMySessionPayload[j] = str[j];
+		}
+		PRINTF("Sending: %s", pMySessionPayload);
+
+		FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
+		COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize);
+	}
+	// this is to debug other router
+//	if(gCoapPOST_c == pSession->code)
 //	{
-//		if (gCoapConfirmable_c == pSession->msgType) // CONFIRMABLE
-//		{
-//			/* Send Ack message */
-//			COAP_Send(pSession, gCoapMsgTypeAckSuccessChanged_c, pMySessionPayload, pMyPayloadSize);
-//		}
-//		/* creation and init of CoAP session */
-//		pMySession -> msgType = gCoapNonConfirmable_c;
-//		pMySession -> code = gCoapPOST_c;
-//		pMySession -> pCallback = NULL;
-//		/* Send message */
-//		FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
-//		COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize);
+//		PRINTF("Received: \r\n");
+//		shell_writeN(pData, dataLen); // PRINTS incoming data
+//		shell_write("\r\n");
 //	}
-//
-//	shell_writeN(pData, dataLen); // PRINTS incoming data
-//	shell_write("\r\n");
-////	/* creation and init of CoAP session */
-////	pMySession -> msgType=gCoapNonConfirmable_c;
-////	pMySession -> code= gCoapPOST_c;
-////	pMySession -> pCallback =NULL;
-////	/* Send message */
-////	FLib_MemCpy(&pMySession->remoteAddrStorage,&gCoapDestAddress,sizeof(ipAddr_t));
-////	COAP_Send(pMySession, gCoapMsgTypeNonPost_c, pMySessionPayload, pMyPayloadSize); //TODO: check message type
-//
-////	shell_write("'NON' packet sent 'POST' with payload: ");
-////	shell_writeN((char*) pMySessionPayload, pMyPayloadSize);
-////	shell_write("\r\n");
-	xy_values xy;
-	xy = bubble();
-	PRINTF("x= %6d y = %6d\r\n", xy.x, xy.y);
 }
 
 #if LARGE_NETWORK
